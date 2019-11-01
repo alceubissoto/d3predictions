@@ -34,7 +34,13 @@
 	// set the dimensions and margins of the graph
 	var margin = {top: 30, right: 30, bottom: 30, left: 30},
 	width = 1500 - margin.left - margin.right,
-	height = 750 - margin.top - margin.bottom;
+	height = 750 - margin.top - margin.bottom,
+	gridSize = Math.floor(width / 40),
+	legendElementWidth = gridSize*2,
+	buckets = 9,
+	colors =  d3.schemeRdBu[buckets];
+
+console.log(colors);
 
 // append the svg object to the body of the page
 var svg = d3.select("#my_dataviz")
@@ -95,6 +101,30 @@ svg.append("g")
 	)
 
 
+//Append a defs (for definition) element to your SVG
+var defs = svg.append("defs");
+
+//Append a linearGradient element to the defs and give it a unique id
+var linearGradient = defs.append("linearGradient")
+    .attr("id", "linear-gradient");
+
+//Horizontal gradient
+linearGradient
+    .attr("x1", "0%")
+    .attr("y1", "0%")
+    .attr("x2", "100%")
+    .attr("y2", "0%");
+
+var colorScale = d3.scaleLinear()
+	.range(colors);
+
+linearGradient.selectAll("stop")
+    .data( colorScale.range() )
+    .enter().append("stop")
+    .attr("offset", function(d,i) { return i/(colorScale.range().length-1); })
+    .attr("stop-color", function(d) { return d; });
+
+
 var input = d3.select("body").append("input")
 	.attr("type","file")
 	.on("change", handleFileSelect)
@@ -103,7 +133,46 @@ var input2 = d3.select("body").append("input")
         .attr("type","file")
         .on("change", handleFileSelect2)
 
+var legendScale = d3.select("body").append("svg")
+.attr("width", 700)
+.attr("height", 100)
 
+legendScale.append("text")
+     .attr("x", 48)
+     .attr("y", 9)
+     .attr("dy", ".35em")
+     .style("text-anchor", "end")
+     .text("Legend");
+
+
+legendScale.append("text")
+     .attr("x", 0)
+     .attr("y", 35)
+     .attr("dy", ".35em")
+     .style("text-anchor", "start")
+     .text("False Negative");
+
+legendScale.append("text")
+     .attr("x", 350)
+     .attr("y", 35)
+     .attr("dy", ".35em")
+     .style("text-anchor", "middle")
+     .text("Correct");
+
+
+legendScale.append("text")
+     .attr("x", 700)
+     .attr("y", 35)
+     .attr("dy", ".35em")
+     .style("text-anchor", "end")
+     .text("False Positive");
+
+
+legendScale.append("rect")
+    .attr("width", 700)
+    .attr("height", 20)
+    .attr("y", 50)
+    .style("fill", "url(#linear-gradient)");
 
 function handleFileSelect() {
         // Check for the various File API support.
@@ -192,6 +261,7 @@ function load_d3(fileHandler, side) {
 				.style("stroke", "none")
 				.style("opacity", 0.8)
 		}
+
 
 		// add the squares
 		svg.selectAll()
